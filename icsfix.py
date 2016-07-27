@@ -31,9 +31,11 @@ def insertValarm(fileToInsertIn, alarmDesc, triggerTimeMinutes ):
 
 	vAlarm = """BEGIN:VALARM
 TRIGGER:-PT%sM
+REPEAT:1
+DURATION:PT15M
 ACTION:DISPLAY
 DESCRIPTION:%s
-END:VALARM	
+END:VALARM
 """ % (triggerTimeMinutes, alarmDesc)
 
 	fileToInsertIn.write(vAlarm)
@@ -49,21 +51,21 @@ def usage():
 		print """
 Usage: python icsfix.py file [reminder time]
 
- Where: 
+ Where:
   file = ICS file
   reminder time =  time in minutes (1..360) to remind before the event.
-  
+
   If reminder time is not given, no VALARM block is inserted.
   """
   		exit(1)
-  				
+
 
 def main():
-	
+
 	#Check for valid amount of command line arguments
 	if len(sys.argv) < 2 or len(sys.argv) > 3 :
 		usage()
-	
+
 	if len(sys.argv) == 3:
 		# Try to set alarm trigger value with user given value
 		triggerTimeMinutes = sys.argv[2]
@@ -72,14 +74,14 @@ def main():
 	else:
 		#Set triggerTimeMinutes, meaning that no VALARM is inserted into the VEVENTS
 		triggerTimeMinutes = None
-	
+
 	#Try to open ICS file
 	try:
 		icsfile = sys.argv[1]
 		filein = open(icsfile, 'r')
 	except:
 		sys.exit("ERROR. Can't read supplied file: %s" % icsfile)
-			
+
 	#Try to open output file for fixed ICS content
 	try:
 		icsfilebase = os.path.splitext(os.path.basename(icsfile))[0]
@@ -87,9 +89,9 @@ def main():
 		fileout = open(outfile, 'w')
 	except:
 		sys.exit("ERROR. Can't open output file: %s" % outfile)
-	
+
 	vtimezoneInserted = False
-	
+
 	#Parse input file
 	for line in filein:
 		if "BEGIN:VEVENT" in line.upper():
@@ -122,20 +124,18 @@ def main():
 			alarmDesc=line.split("SUMMARY:")[1]
 			alarmDesc=alarmDesc.rstrip("\n")
 			fileout.write(line)
-		elif "END:VEVENT" in line.upper():	
+		elif "END:VEVENT" in line.upper():
 			if triggerTimeMinutes <> None:
 				#Insert VALARM before the end of the VEVENT
 				insertValarm(fileout, alarmDesc, triggerTimeMinutes)
 			fileout.write(line + "\n")
 		else:
 			fileout.write(line)
-	
-	
+
+
 	#Close files
 	filein.close()
 	fileout.close()
-	
+
 # Run it
 main()
-
-
